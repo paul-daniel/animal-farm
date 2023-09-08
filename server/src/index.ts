@@ -16,19 +16,22 @@ const generateAnimals = (amount : number) => {
 }
 
 const app = express();
+const animals = generateAnimals(50);
 
 app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('go to /api route to use the server.')
+    res.send('/animals route to use the server.')
 })
 
-app.get('/api', (req : express.Request, res: express.Response) => {
+app.get('/animals', (req : express.Request, res: express.Response) => {
     try {
-        const numberOfAnimals = Number(req.query.amount) || 50;
-        const animal = generateAnimals(numberOfAnimals);
-        res.status(200).json(animal);
+        const q = req.query.q || '';
+        const results = animals.filter(
+        (animal) => animal.type.toLowerCase().includes((q as string).toLowerCase()) 
+        );
+        res.send(results);
     } catch (error) {
         res.status(500).send(`Internal server error: ${error}`)
     }

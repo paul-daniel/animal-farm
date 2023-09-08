@@ -1,33 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
+import Animal from './Animals';
+
+interface AnimalObject {
+  id: string;
+  name: string;
+  type: string;
+  age :number;
+  gender: string;
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [animalList, setAnimalList] = useState<AnimalObject[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const search = async (animalType : string) => {
+    setLoading(true)
+    window.localStorage.setItem('lastQuery', animalType)
+    const response = await fetch(`http://localhost:3000/animals?` + new URLSearchParams({ q: animalType }))
+    const data = await response.json()
+    setAnimalList(data)
+    setLoading(false)
+  }
+
+  useEffect(()=>{
+    const lastQuery = window.localStorage.getItem('lastQuery') ?? ''
+    search(lastQuery)
+  },[])
 
   return (
     <>
+
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <input type='text' defaultValue={window.localStorage.getItem('lastQuery') ?? ''} onChange={(e)=>search(e.target.value)} />
+        {loading? <p>Loading...</p> :
+        animalList.length > 0 ?
+          <ul>
+            {animalList.map((animal) => 
+              <Animal key={animal.id} {...animal}  />
+            )}
+          </ul>
+        :
+        <p>No animals found</p>
+        }
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
